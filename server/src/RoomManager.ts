@@ -1,3 +1,5 @@
+import type { GameState } from '@six-balls/shared';
+
 type PlayerId = string;
 type RoomCode = string;
 
@@ -6,6 +8,7 @@ interface Room {
   players: PlayerId[];
   ready: Set<PlayerId>;
   socketToPlayer: Map<string, PlayerId>;
+  gameState: GameState | null;
 }
 
 export class RoomManager {
@@ -31,6 +34,7 @@ export class RoomManager {
       players: [playerId],
       ready: new Set(),
       socketToPlayer: new Map([[socketId, playerId]]),
+      gameState: null,
     };
     this.rooms.set(code, room);
     this.playerToRoom.set(playerId, code);

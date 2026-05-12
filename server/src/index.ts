@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { RoomManager } from './RoomManager';
+import { processInput, createInitialGameState } from './GameEngine';
 
 const app = express();
 const httpServer = createServer(app);
@@ -64,24 +65,20 @@ io.on('connection', (socket) => {
     if (!room) return;
 
     if (roomManager.isAllReady(room.code)) {
-      io.to(room.code).emit('gameStart', {
-        gameState: {
-          phase: 'countdown',
-          startTime: Date.now() + 3000,
-        },
-      });
+      const gameState = createInitialGameState();
+      room.gameState = gameState;
+      io.to(room.code).emit('gameStart', { gameState });
     }
   });
 
   // Player input
   socket.on('playerInput', ({ action }: { action: string }) => {
     const room = roomManager.getRoomBySocketId(socket.id);
-    if (!room) return;
-    // Forward to game engine (Task 28)
-    io.to(room.code).emit('playerAction', {
-      playerId: socket.id,
-      action,
-    });
+    if (!room || !room.gameState) return;
+    const playerId = roomManager.getPlayerIdBySocket(socket.id);
+    if (!playerId) return;
+    room.gameState = processInput(room.gameState, playerId, action as any);
+    io.to(room.code).emit('gameStateUpdate', { gameState: room.gameState });
   });
 
   // Disconnect
