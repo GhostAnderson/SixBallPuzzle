@@ -1,4 +1,5 @@
-import type { PatternMatch, Attack, BallColor } from './types';
+import type { PatternMatch, Attack, Ball, TrianglePiece } from './types';
+import { getPieceBallPositions } from './piece';
 import { setBall, type Grid } from './grid';
 import { applyGravity } from './gravity';
 import { findPatterns } from './patterns';
@@ -67,4 +68,25 @@ export function processBoard(grid: Grid): { grid: Grid; attacks: Attack[] } {
   }
 
   return { grid: currentGrid, attacks: allAttacks };
+}
+
+/**
+ * Land a piece: place its 3 balls on the grid, then process the board
+ * (find patterns, clear, apply gravity, chain).
+ */
+export function landPiece(grid: Grid, piece: TrianglePiece): { grid: Grid; attacks: Attack[] } {
+  // Place the piece's balls on the grid
+  const newGrid: Grid = grid.map(row => [...row]);
+  const positions = getPieceBallPositions(piece);
+
+  for (let i = 0; i < 3; i++) {
+    const ball: Ball = {
+      color: piece.colors[i],
+      position: positions[i],
+    };
+    setBall(newGrid, positions[i], ball);
+  }
+
+  // Process the board (find patterns, clear, gravity, chain)
+  return processBoard(newGrid);
 }
