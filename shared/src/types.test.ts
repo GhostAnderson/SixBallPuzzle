@@ -3,9 +3,7 @@ import {
   BALL_COLORS,
   GRID_WIDTH_EVEN,
   GRID_WIDTH_ODD,
-  GRID_HEIGHT,
-  type BallColor,
-  type GridPosition
+  GRID_HEIGHT
 } from './types';
 
 describe('types', () => {
