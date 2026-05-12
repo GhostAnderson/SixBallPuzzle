@@ -356,3 +356,53 @@ export function findHexagonRing(grid: Grid): PatternMatch[] {
 
   return matches;
 }
+
+/**
+ * Find all patterns on the grid, returning only the highest-priority match
+ * when multiple patterns overlap. Priority order (highest first):
+ * 1. hexagonRing
+ * 2. sixLine
+ * 3. pyramid
+ * 4. sixConnected
+ */
+export function findPatterns(grid: Grid): PatternMatch[] {
+  const hexagonRings = findHexagonRing(grid);
+  const sixLines = findSixLine(grid);
+  const pyramids = findPyramid(grid);
+  const sixConnected = findSixConnected(grid);
+
+  // Collect all positions used by higher-priority matches
+  const usedPositions = new Set<string>();
+  const keyFunc = (pos: GridPosition) => `${pos.row},${pos.col}`;
+
+  const results: PatternMatch[] = [];
+
+  // Priority 1: Hexagon rings
+  for (const match of hexagonRings) {
+    results.push(match);
+    match.positions.forEach(p => usedPositions.add(keyFunc(p)));
+  }
+
+  // Priority 2: Six lines (exclude positions already used)
+  for (const match of sixLines) {
+    if (match.positions.some(p => usedPositions.has(keyFunc(p)))) continue;
+    results.push(match);
+    match.positions.forEach(p => usedPositions.add(keyFunc(p)));
+  }
+
+  // Priority 3: Pyramids
+  for (const match of pyramids) {
+    if (match.positions.some(p => usedPositions.has(keyFunc(p)))) continue;
+    results.push(match);
+    match.positions.forEach(p => usedPositions.add(keyFunc(p)));
+  }
+
+  // Priority 4: Six connected (lowest priority)
+  for (const match of sixConnected) {
+    if (match.positions.some(p => usedPositions.has(keyFunc(p)))) continue;
+    results.push(match);
+    match.positions.forEach(p => usedPositions.add(keyFunc(p)));
+  }
+
+  return results;
+}

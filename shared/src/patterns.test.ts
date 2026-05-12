@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findSixConnected, findSixLine, findHexagonRing, findPyramid } from './patterns';
+import { findSixConnected, findSixLine, findHexagonRing, findPyramid, findPatterns } from './patterns';
 import { createEmptyGrid, setBall } from './grid';
 import type { Ball } from './types';
 
@@ -216,5 +216,35 @@ describe('findPyramid', () => {
 
     const matches = findPyramid(grid);
     expect(matches).toEqual([]);
+  });
+});
+
+describe('findPatterns', () => {
+  it('returns empty array for empty grid', () => {
+    const grid = createEmptyGrid();
+    const matches = findPatterns(grid);
+    expect(matches).toEqual([]);
+  });
+
+  it('returns matches ordered by priority: ring > line > pyramid > connected', () => {
+    const grid = createEmptyGrid();
+
+    // Set up a hexagon ring (priority 1, red)
+    setBall(grid, { row: 3, col: 4 }, { color: 'red', position: { row: 3, col: 4 } });
+    setBall(grid, { row: 3, col: 5 }, { color: 'red', position: { row: 3, col: 5 } });
+    setBall(grid, { row: 2, col: 4 }, { color: 'red', position: { row: 2, col: 4 } });
+    setBall(grid, { row: 2, col: 6 }, { color: 'red', position: { row: 2, col: 6 } });
+    setBall(grid, { row: 1, col: 4 }, { color: 'red', position: { row: 1, col: 4 } });
+    setBall(grid, { row: 1, col: 5 }, { color: 'red', position: { row: 1, col: 5 } });
+
+    // Also set up 6 connected green balls (priority 4)
+    for (let col = 5; col <= 10; col++) {
+      setBall(grid, { row: 8, col }, { color: 'green', position: { row: 8, col } });
+    }
+
+    const matches = findPatterns(grid);
+    expect(matches.length).toBeGreaterThanOrEqual(1);
+    // First match should be hexagon ring (highest priority)
+    expect(matches[0].type).toBe('hexagonRing');
   });
 });
