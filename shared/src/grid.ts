@@ -1,4 +1,4 @@
-import { GRID_WIDTH_EVEN, GRID_WIDTH_ODD, GRID_HEIGHT, type GridPosition } from './types';
+import { GRID_WIDTH_EVEN, GRID_WIDTH_ODD, GRID_HEIGHT, type GridPosition, type Ball } from './types';
 
 /**
  * Get the width (number of columns) for a given row.
@@ -68,4 +68,39 @@ export function getNeighbors(pos: GridPosition): GridPosition[] {
   }
 
   return neighbors;
+}
+
+/** The grid is a 2D array: grid[row][col] */
+export type Grid = (Ball | null)[][];
+
+/**
+ * Create an empty grid with correct dimensions.
+ */
+export function createEmptyGrid(): Grid {
+  const grid: Grid = [];
+  for (let row = 0; row < GRID_HEIGHT; row++) {
+    const width = getRowWidth(row);
+    grid.push(new Array(width).fill(null));
+  }
+  return grid;
+}
+
+/**
+ * Get the ball at a position, or null if empty.
+ */
+export function getBall(grid: Grid, pos: GridPosition): Ball | null {
+  if (!isValidPosition(pos)) {
+    return null;
+  }
+  return grid[pos.row][pos.col];
+}
+
+/**
+ * Set a ball at a position (or null to clear).
+ */
+export function setBall(grid: Grid, pos: GridPosition, ball: Ball | null): void {
+  if (!isValidPosition(pos)) {
+    return;
+  }
+  grid[pos.row][pos.col] = ball;
 }

@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { isValidPosition, getRowWidth, getNeighbors } from './grid';
+import {
+  isValidPosition,
+  getRowWidth,
+  getNeighbors,
+  createEmptyGrid,
+  getBall,
+  setBall,
+  type Grid
+} from './grid';
+import type { Ball } from './types';
 
 describe('grid', () => {
   describe('getRowWidth', () => {
@@ -80,5 +89,66 @@ describe('grid', () => {
         expect(isValidPosition(n)).toBe(true);
       });
     });
+  });
+});
+
+describe('createEmptyGrid', () => {
+  it('creates a grid with 12 rows', () => {
+    const grid = createEmptyGrid();
+    expect(grid).toHaveLength(12);
+  });
+
+  it('even rows have 10 columns', () => {
+    const grid = createEmptyGrid();
+    expect(grid[0]).toHaveLength(10);
+    expect(grid[2]).toHaveLength(10);
+    expect(grid[10]).toHaveLength(10);
+  });
+
+  it('odd rows have 9 columns', () => {
+    const grid = createEmptyGrid();
+    expect(grid[1]).toHaveLength(9);
+    expect(grid[3]).toHaveLength(9);
+    expect(grid[11]).toHaveLength(9);
+  });
+
+  it('all cells are null initially', () => {
+    const grid = createEmptyGrid();
+    for (let row = 0; row < 12; row++) {
+      for (let col = 0; col < getRowWidth(row); col++) {
+        expect(grid[row][col]).toBeNull();
+      }
+    }
+  });
+});
+
+describe('getBall / setBall', () => {
+  it('sets and gets a ball at a position', () => {
+    const grid = createEmptyGrid();
+    const ball: Ball = { color: 'red', position: { row: 0, col: 0 } };
+
+    setBall(grid, { row: 0, col: 0 }, ball);
+    expect(getBall(grid, { row: 0, col: 0 })).toEqual(ball);
+  });
+
+  it('returns null for empty positions', () => {
+    const grid = createEmptyGrid();
+    expect(getBall(grid, { row: 5, col: 5 })).toBeNull();
+  });
+
+  it('can clear a position by setting null', () => {
+    const grid = createEmptyGrid();
+    const ball: Ball = { color: 'blue', position: { row: 2, col: 3 } };
+
+    setBall(grid, { row: 2, col: 3 }, ball);
+    setBall(grid, { row: 2, col: 3 }, null);
+    expect(getBall(grid, { row: 2, col: 3 })).toBeNull();
+  });
+
+  it('is a no-op for invalid positions', () => {
+    const grid = createEmptyGrid();
+    setBall(grid, { row: -1, col: 0 }, { color: 'red', position: { row: -1, col: 0 } });
+    // No error thrown; grid unchanged
+    expect(createEmptyGrid()).toEqual(grid);
   });
 });
