@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findSixConnected } from './patterns';
+import { findSixConnected, findSixLine } from './patterns';
 import { createEmptyGrid, setBall } from './grid';
 import type { Ball } from './types';
 
@@ -49,5 +49,49 @@ describe('findSixConnected', () => {
     setBall(grid, { row: 0, col: 5 }, { color: 'blue', position: { row: 0, col: 5 } } as Ball);
     const matches = findSixConnected(grid);
     expect(matches).toEqual([]);
+  });
+});
+
+describe('findSixLine', () => {
+  it('returns empty array for empty grid', () => {
+    const grid = createEmptyGrid();
+    const matches = findSixLine(grid);
+    expect(matches).toEqual([]);
+  });
+
+  it('finds horizontal six-line', () => {
+    const grid = createEmptyGrid();
+    for (let col = 0; col < 6; col++) {
+      setBall(grid, { row: 0, col }, { color: 'red', position: { row: 0, col } });
+    }
+    const matches = findSixLine(grid);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].type).toBe('sixLine');
+    expect(matches[0].color).toBe('red');
+  });
+
+  it('does not match 5 in a line', () => {
+    const grid = createEmptyGrid();
+    for (let col = 0; col < 5; col++) {
+      setBall(grid, { row: 0, col }, { color: 'red', position: { row: 0, col } });
+    }
+    const matches = findSixLine(grid);
+    expect(matches).toEqual([]);
+  });
+
+  it('finds diagonal six-line (upper-left to lower-right)', () => {
+    const grid = createEmptyGrid();
+    // UpperRight diagonal: (0,2) -> (1,2) -> (2,3) -> (3,3) -> (4,4) -> (5,4)
+    const positions = [
+      { row: 0, col: 2 }, { row: 1, col: 2 }, { row: 2, col: 3 },
+      { row: 3, col: 3 }, { row: 4, col: 4 }, { row: 5, col: 4 },
+    ];
+    positions.forEach(pos => {
+      setBall(grid, pos, { color: 'blue', position: pos });
+    });
+
+    const matches = findSixLine(grid);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].type).toBe('sixLine');
   });
 });
