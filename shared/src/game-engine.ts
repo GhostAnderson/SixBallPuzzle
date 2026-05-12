@@ -1,6 +1,6 @@
-import type { PatternMatch, Attack, Ball, TrianglePiece } from './types';
+import { GRID_HEIGHT, type PatternMatch, type Attack, type Ball, type TrianglePiece } from './types';
 import { getPieceBallPositions } from './piece';
-import { setBall, type Grid } from './grid';
+import { getBall, setBall, getRowWidth, type Grid } from './grid';
 import { applyGravity } from './gravity';
 import { findPatterns } from './patterns';
 
@@ -89,4 +89,18 @@ export function landPiece(grid: Grid, piece: TrianglePiece): { grid: Grid; attac
 
   // Process the board (find patterns, clear, gravity, chain)
   return processBoard(newGrid);
+}
+
+/**
+ * Check if the game is over due to overflow.
+ * Returns true if any ball exists in the top row (row 11).
+ */
+export function isGameOver(grid: Grid): boolean {
+  // Check top row (GRID_HEIGHT - 1) for any balls
+  for (let col = 0; col < getRowWidth(GRID_HEIGHT - 1); col++) {
+    if (getBall(grid, { row: GRID_HEIGHT - 1, col }) !== null) {
+      return true;
+    }
+  }
+  return false;
 }

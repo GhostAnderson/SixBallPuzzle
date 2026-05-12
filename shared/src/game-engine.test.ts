@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clearPattern, processBoard, landPiece } from './game-engine';
+import { clearPattern, processBoard, landPiece, isGameOver } from './game-engine';
 import { createEmptyGrid, setBall, getBall } from './grid';
 import { getPieceBallPositions } from './piece';
 import type { Ball, PatternMatch, TrianglePiece } from './types';
@@ -95,5 +95,34 @@ describe('landPiece', () => {
     // The blue ball should connect forming a 6+ group and be cleared
     // Check that gravity was applied (balls fell down)
     expect(result.grid.length).toBe(12); // Grid still valid
+  });
+});
+
+describe('isGameOver', () => {
+  it('returns false for an empty grid', () => {
+    const grid = createEmptyGrid();
+    expect(isGameOver(grid)).toBe(false);
+  });
+
+  it('returns false when balls exist but none in the top row', () => {
+    const grid = createEmptyGrid();
+    setBall(grid, { row: 0, col: 0 }, { color: 'red', position: { row: 0, col: 0 } });
+    setBall(grid, { row: 5, col: 4 }, { color: 'blue', position: { row: 5, col: 4 } });
+    expect(isGameOver(grid)).toBe(false);
+  });
+
+  it('returns true when a ball exists in the top row (row 11)', () => {
+    const grid = createEmptyGrid();
+    setBall(grid, { row: 11, col: 0 }, { color: 'red', position: { row: 11, col: 0 } });
+    expect(isGameOver(grid)).toBe(true);
+  });
+
+  it('returns true when any ball overflows into the top row', () => {
+    const grid = createEmptyGrid();
+    // Fill row 11 completely with balls
+    for (let col = 0; col < 9; col++) {
+      setBall(grid, { row: 11, col }, { color: 'purple', position: { row: 11, col } });
+    }
+    expect(isGameOver(grid)).toBe(true);
   });
 });
