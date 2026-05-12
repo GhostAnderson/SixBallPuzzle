@@ -3,3 +3,4 @@ export * from './grid';
 export * from './piece';
 export * from './gravity';
 export * from './patterns';
+export * from './game-engine';
