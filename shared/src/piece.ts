@@ -1,4 +1,5 @@
 import type { TrianglePiece, GridPosition, RotationState } from './types';
+import { isValidPosition, getBall, type Grid } from './grid';
 
 interface Offset {
   dRow: number;
@@ -52,4 +53,63 @@ export function getPieceBallPositions(piece: TrianglePiece): [GridPosition, Grid
     row: position.row + offset.dRow,
     col: position.col + (isEvenRow ? offset.dColEven : offset.dColOdd),
   })) as [GridPosition, GridPosition, GridPosition];
+}
+
+export type MoveDirection = 'left' | 'right' | 'down';
+
+/**
+ * Create a new piece moved in the specified direction.
+ * Does not check validity.
+ */
+export function movePiece(piece: TrianglePiece, direction: MoveDirection): TrianglePiece {
+  const { position } = piece;
+  let newPosition: GridPosition;
+
+  switch (direction) {
+    case 'left':
+      newPosition = { row: position.row, col: position.col - 1 };
+      break;
+    case 'right':
+      newPosition = { row: position.row, col: position.col + 1 };
+      break;
+    case 'down':
+      newPosition = { row: position.row - 1, col: position.col };
+      break;
+  }
+
+  return {
+    ...piece,
+    position: newPosition,
+  };
+}
+
+/**
+ * Create a new piece rotated 60 degrees clockwise.
+ * Does not check validity.
+ */
+export function rotatePiece(piece: TrianglePiece): TrianglePiece {
+  const newRotation = ((piece.rotation + 1) % 6) as RotationState;
+  return {
+    ...piece,
+    rotation: newRotation,
+  };
+}
+
+/**
+ * Check if a piece can be placed on the grid.
+ * Returns false if any ball position is out of bounds or occupied.
+ */
+export function canPlacePiece(grid: Grid, piece: TrianglePiece): boolean {
+  const positions = getPieceBallPositions(piece);
+
+  for (const pos of positions) {
+    if (!isValidPosition(pos)) {
+      return false;
+    }
+    if (getBall(grid, pos) !== null) {
+      return false;
+    }
+  }
+
+  return true;
 }
