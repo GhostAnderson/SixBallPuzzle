@@ -72,4 +72,6 @@ export interface GameState {
   players: [PlayerState, PlayerState];
   startTime: number | null;
   winner: string | null;
+  pieceIndex: number;
+  pieceSequence: TrianglePiece[];
 }

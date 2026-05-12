@@ -2,6 +2,10 @@ import type { TrianglePiece, GridPosition, RotationState, BallColor } from './ty
 import { isValidPosition, getBall, type Grid } from './grid';
 import { BALL_COLORS, GRID_HEIGHT } from './types';
 
+interface RNGLike {
+  pickOne<T>(items: readonly T[]): T;
+}
+
 interface Offset {
   dRow: number;
   dColEven: number;
@@ -116,30 +120,23 @@ export function canPlacePiece(grid: Grid, piece: TrianglePiece): boolean {
 }
 
 /**
- * Get a random ball color.
+ * Create a piece at the spawn position (bottom center of grid).
+ * Accepts an optional RNG for deterministic piece generation.
  */
-function randomColor(): BallColor {
-  return BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)];
+export function createPieceAtSpawn(rng?: RNGLike): TrianglePiece {
+  const pick = rng
+    ? () => rng.pickOne(BALL_COLORS)
+    : () => BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)];
+  return { position: { row: GRID_HEIGHT - 1, col: 4 }, rotation: 0, colors: [pick(), pick(), pick()] };
 }
 
 /**
  * Create a new random triangle piece at default position.
+ * Accepts an optional RNG for deterministic piece generation.
  */
-export function createRandomPiece(): TrianglePiece {
-  return {
-    position: { row: 0, col: 0 },
-    rotation: 0,
-    colors: [randomColor(), randomColor(), randomColor()],
-  };
-}
-
-/**
- * Create a piece at the spawn position (top center of grid).
- */
-export function createPieceAtSpawn(): TrianglePiece {
-  return {
-    position: { row: GRID_HEIGHT - 1, col: 4 },
-    rotation: 0,
-    colors: [randomColor(), randomColor(), randomColor()],
-  };
+export function createRandomPiece(rng?: RNGLike): TrianglePiece {
+  const pick = rng
+    ? () => rng.pickOne(BALL_COLORS)
+    : () => BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)];
+  return { position: { row: 0, col: 0 }, rotation: 0, colors: [pick(), pick(), pick()] };
 }
