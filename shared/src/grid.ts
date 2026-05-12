@@ -20,3 +20,52 @@ export function isValidPosition(pos: GridPosition): boolean {
   }
   return true;
 }
+
+/** Direction names for the 6 hex neighbors */
+export type HexDirection = 'upperLeft' | 'upperRight' | 'left' | 'right' | 'lowerLeft' | 'lowerRight';
+
+function getNeighborOffset(isEvenRow: boolean, direction: HexDirection): { dRow: number; dCol: number } {
+  if (isEvenRow) {
+    switch (direction) {
+      case 'upperLeft':  return { dRow: 1, dCol: -1 };
+      case 'upperRight': return { dRow: 1, dCol: 0 };
+      case 'left':       return { dRow: 0, dCol: -1 };
+      case 'right':      return { dRow: 0, dCol: 1 };
+      case 'lowerLeft':  return { dRow: -1, dCol: -1 };
+      case 'lowerRight': return { dRow: -1, dCol: 0 };
+    }
+  } else {
+    switch (direction) {
+      case 'upperLeft':  return { dRow: 1, dCol: 0 };
+      case 'upperRight': return { dRow: 1, dCol: 1 };
+      case 'left':       return { dRow: 0, dCol: -1 };
+      case 'right':      return { dRow: 0, dCol: 1 };
+      case 'lowerLeft':  return { dRow: -1, dCol: 0 };
+      case 'lowerRight': return { dRow: -1, dCol: 1 };
+    }
+  }
+}
+
+const ALL_DIRECTIONS: HexDirection[] = ['upperLeft', 'upperRight', 'left', 'right', 'lowerLeft', 'lowerRight'];
+
+/**
+ * Get all valid neighbor positions for a given position.
+ * Returns only positions that are within the grid bounds.
+ */
+export function getNeighbors(pos: GridPosition): GridPosition[] {
+  const isEvenRow = pos.row % 2 === 0;
+  const neighbors: GridPosition[] = [];
+
+  for (const direction of ALL_DIRECTIONS) {
+    const offset = getNeighborOffset(isEvenRow, direction);
+    const neighbor: GridPosition = {
+      row: pos.row + offset.dRow,
+      col: pos.col + offset.dCol,
+    };
+    if (isValidPosition(neighbor)) {
+      neighbors.push(neighbor);
+    }
+  }
+
+  return neighbors;
+}
