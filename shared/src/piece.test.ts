@@ -4,7 +4,10 @@ import {
   movePiece,
   rotatePiece,
   canPlacePiece,
+  createRandomPiece,
+  createPieceAtSpawn,
 } from './piece';
+import { BALL_COLORS, GRID_HEIGHT } from './types';
 import { createEmptyGrid, setBall } from './grid';
 import type { TrianglePiece, Ball } from './types';
 
@@ -134,5 +137,34 @@ describe('canPlacePiece', () => {
       colors: ['red', 'blue', 'green'],
     };
     expect(canPlacePiece(grid, piece)).toBe(false);
+  });
+});
+
+describe('createRandomPiece', () => {
+  it('creates a piece with 3 valid colors', () => {
+    const piece = createRandomPiece();
+    expect(piece.colors).toHaveLength(3);
+    piece.colors.forEach(color => {
+      expect(BALL_COLORS).toContain(color);
+    });
+  });
+
+  it('starts at rotation 0', () => {
+    const piece = createRandomPiece();
+    expect(piece.rotation).toBe(0);
+  });
+
+  it('creates different pieces (randomness check)', () => {
+    const pieces = Array.from({ length: 20 }, () => createRandomPiece());
+    const uniqueColorCombos = new Set(pieces.map(p => p.colors.join(',')));
+    expect(uniqueColorCombos.size).toBeGreaterThan(1);
+  });
+});
+
+describe('createPieceAtSpawn', () => {
+  it('creates piece at top center', () => {
+    const piece = createPieceAtSpawn();
+    expect(piece.position.row).toBe(GRID_HEIGHT - 1);  // Top row (11)
+    expect(piece.position.col).toBe(4);  // Center-ish
   });
 });

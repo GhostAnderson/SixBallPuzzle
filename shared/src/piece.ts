@@ -1,5 +1,6 @@
-import type { TrianglePiece, GridPosition, RotationState } from './types';
+import type { TrianglePiece, GridPosition, RotationState, BallColor } from './types';
 import { isValidPosition, getBall, type Grid } from './grid';
+import { BALL_COLORS, GRID_HEIGHT } from './types';
 
 interface Offset {
   dRow: number;
@@ -112,4 +113,33 @@ export function canPlacePiece(grid: Grid, piece: TrianglePiece): boolean {
   }
 
   return true;
+}
+
+/**
+ * Get a random ball color.
+ */
+function randomColor(): BallColor {
+  return BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)];
+}
+
+/**
+ * Create a new random triangle piece at default position.
+ */
+export function createRandomPiece(): TrianglePiece {
+  return {
+    position: { row: 0, col: 0 },
+    rotation: 0,
+    colors: [randomColor(), randomColor(), randomColor()],
+  };
+}
+
+/**
+ * Create a piece at the spawn position (top center of grid).
+ */
+export function createPieceAtSpawn(): TrianglePiece {
+  return {
+    position: { row: GRID_HEIGHT - 1, col: 4 },
+    rotation: 0,
+    colors: [randomColor(), randomColor(), randomColor()],
+  };
 }
