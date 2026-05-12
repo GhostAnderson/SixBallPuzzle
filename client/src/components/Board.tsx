@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import type { Grid, TrianglePiece, GridPosition } from '@six-balls/shared';
-import { getRowWidth } from '@six-balls/shared';
+import { getRowWidth, getPieceBallPositions } from '@six-balls/shared';
 
 const BALL_RADIUS = 14;
 const HEX_SIZE = 30;
@@ -17,7 +17,7 @@ interface BoardProps {
   currentPiece?: TrianglePiece | null;
 }
 
-export default function Board({ grid }: BoardProps) {
+export default function Board({ grid, currentPiece }: BoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -69,7 +69,27 @@ export default function Board({ grid }: BoardProps) {
         }
       }
     }
-  }, [grid]);
+
+    // Draw falling piece
+    if (currentPiece) {
+      const piecePositions = getPieceBallPositions(currentPiece);
+      for (let i = 0; i < 3; i++) {
+        const pos = piecePositions[i];
+        const isEvenRow = pos.row % 2 === 0;
+        const x = pos.col * HEX_SIZE + 40 + (isEvenRow ? 0 : HEX_SIZE / 2);
+        const y = (TOTAL_ROWS - 1 - pos.row) * HEX_SIZE + 40;
+        const color = currentPiece.colors[i];
+
+        ctx.beginPath();
+        ctx.arc(x, y, BALL_RADIUS, 0, Math.PI * 2);
+        ctx.fillStyle = COLORS[color] || '#ccc';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+  }, [grid, currentPiece]);
 
   return (
     <canvas
