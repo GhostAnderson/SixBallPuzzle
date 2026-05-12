@@ -189,6 +189,134 @@ function getAllNeighborPositions(center: GridPosition): (GridPosition | null)[] 
 }
 
 /**
+/* ------------------------------------------------------------------ */
+/*  Pyramid (1+2+3 triangle)                                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Compute the 6 positions of a point-up pyramid (base at bottom, apex upward),
+ * given the base-left corner (baseRow, baseCol).  The returned positions are
+ * hex-neighbor aware, adjusting for row parity.
+ *
+ * Even baseRow:
+ *   row+0 (even): ▌c …… c+1 …… c+2▐
+ *   row+1 (odd):     ▌c …… c+1▐
+ *   row+2 (even):       ▌c▐
+ *
+ * Odd baseRow:
+ *   row+0 (odd):    ▌c …… c+1 …… c+2▐
+ *   row+1 (even):      ▌c+1 …… c+2▐
+ *   row+2 (odd):          ▌c+2▐
+ */
+function getPointUpPyramid(baseRow: number, baseCol: number): GridPosition[] | null {
+  const isEven = baseRow % 2 === 0;
+  const positions: GridPosition[] = isEven
+    ? [
+        { row: baseRow, col: baseCol },
+        { row: baseRow, col: baseCol + 1 },
+        { row: baseRow, col: baseCol + 2 },
+        { row: baseRow + 1, col: baseCol },
+        { row: baseRow + 1, col: baseCol + 1 },
+        { row: baseRow + 2, col: baseCol },
+      ]
+    : [
+        { row: baseRow, col: baseCol },
+        { row: baseRow, col: baseCol + 1 },
+        { row: baseRow, col: baseCol + 2 },
+        { row: baseRow + 1, col: baseCol + 1 },
+        { row: baseRow + 1, col: baseCol + 2 },
+        { row: baseRow + 2, col: baseCol + 2 },
+      ];
+  if (positions.some(p => !isValidPosition(p))) return null;
+  return positions;
+}
+
+/**
+ * Compute the 6 positions of a point-down pyramid (apex at bottom, base
+ * upward), given the bottom apex (apexRow, apexCol).  Hex-neighbor aware.
+ *
+ * Even apexRow:
+ *   row+0 (even):       ▌c▐
+ *   row+1 (odd):      ▌c-1 …… c▐
+ *   row+2 (even):  ▌c-2 …… c-1 …… c▐
+ *
+ * Odd apexRow:
+ *   row+0 (odd):        ▌c▐
+ *   row+1 (even):      ▌c …… c+1▐
+ *   row+2 (odd):   ▌c-1 …… c …… c+1▐
+ */
+function getPointDownPyramid(apexRow: number, apexCol: number): GridPosition[] | null {
+  const isEven = apexRow % 2 === 0;
+  const positions: GridPosition[] = isEven
+    ? [
+        { row: apexRow, col: apexCol },
+        { row: apexRow + 1, col: apexCol - 1 },
+        { row: apexRow + 1, col: apexCol },
+        { row: apexRow + 2, col: apexCol - 2 },
+        { row: apexRow + 2, col: apexCol - 1 },
+        { row: apexRow + 2, col: apexCol },
+      ]
+    : [
+        { row: apexRow, col: apexCol },
+        { row: apexRow + 1, col: apexCol },
+        { row: apexRow + 1, col: apexCol + 1 },
+        { row: apexRow + 2, col: apexCol - 1 },
+        { row: apexRow + 2, col: apexCol },
+        { row: apexRow + 2, col: apexCol + 1 },
+      ];
+  if (positions.some(p => !isValidPosition(p))) return null;
+  return positions;
+}
+
+/**
+ * Find all pyramid patterns (1+2+3 triangle formations, point-up and
+ * point-down).  Every position in the triangle must be same-colored.
+ */
+export function findPyramid(grid: Grid): PatternMatch[] {
+  const matches: PatternMatch[] = [];
+  const foundPyramids = new Set<string>();
+
+  const keyFunc = (ps: GridPosition[]) =>
+    [...ps]
+      .sort((a, b) => (a.row !== b.row ? a.row - b.row : a.col - b.col))
+      .map(p => `${p.row},${p.col}`)
+      .join('|');
+
+  for (let row = 0; row < GRID_HEIGHT - 2; row++) {
+    const width = getRowWidth(row);
+    for (let col = 0; col < width; col++) {
+      // Point-up pyramid: (row, col) is the base-left corner
+      const up = getPointUpPyramid(row, col);
+      if (up) {
+        const color = getBall(grid, up[0])?.color;
+        if (color && up.every(p => getBall(grid, p)?.color === color)) {
+          const key = keyFunc(up);
+          if (!foundPyramids.has(key)) {
+            foundPyramids.add(key);
+            matches.push({ type: 'pyramid', color, positions: up });
+          }
+        }
+      }
+
+      // Point-down pyramid: (row, col) is the bottom apex
+      const down = getPointDownPyramid(row, col);
+      if (down) {
+        const color = getBall(grid, down[0])?.color;
+        if (color && down.every(p => getBall(grid, p)?.color === color)) {
+          const key = keyFunc(down);
+          if (!foundPyramids.has(key)) {
+            foundPyramids.add(key);
+            matches.push({ type: 'pyramid', color, positions: down });
+          }
+        }
+      }
+    }
+  }
+
+  return matches;
+}
+
+/**
  * Find all hexagon ring patterns (6 same-colored balls around any center).
  */
 export function findHexagonRing(grid: Grid): PatternMatch[] {

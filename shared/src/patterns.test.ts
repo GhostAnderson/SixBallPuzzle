@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findSixConnected, findSixLine, findHexagonRing } from './patterns';
+import { findSixConnected, findSixLine, findHexagonRing, findPyramid } from './patterns';
 import { createEmptyGrid, setBall } from './grid';
 import type { Ball } from './types';
 
@@ -156,5 +156,65 @@ describe('findHexagonRing', () => {
     const matches = findHexagonRing(grid);
     expect(matches).toHaveLength(1);
     expect(matches[0].color).toBe('green');
+  });
+});
+
+describe('findPyramid', () => {
+  it('returns empty array for empty grid', () => {
+    const grid = createEmptyGrid();
+    const matches = findPyramid(grid);
+    expect(matches).toEqual([]);
+  });
+
+  it('finds point-up pyramid (1+2+3 formation)', () => {
+    const grid = createEmptyGrid();
+    // Point up pyramid (row 0 = bottom):
+    // row 0: 3 balls (base)
+    // row 1: 2 balls
+    // row 2: 1 ball (apex)
+    setBall(grid, { row: 0, col: 3 }, { color: 'red', position: { row: 0, col: 3 } });
+    setBall(grid, { row: 0, col: 4 }, { color: 'red', position: { row: 0, col: 4 } });
+    setBall(grid, { row: 0, col: 5 }, { color: 'red', position: { row: 0, col: 5 } });
+    setBall(grid, { row: 1, col: 3 }, { color: 'red', position: { row: 1, col: 3 } });
+    setBall(grid, { row: 1, col: 4 }, { color: 'red', position: { row: 1, col: 4 } });
+    setBall(grid, { row: 2, col: 3 }, { color: 'red', position: { row: 2, col: 3 } });
+
+    const matches = findPyramid(grid);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].type).toBe('pyramid');
+    expect(matches[0].color).toBe('red');
+    expect(matches[0].positions).toHaveLength(6);
+  });
+
+  it('finds point-down pyramid (inverted)', () => {
+    const grid = createEmptyGrid();
+    // Point down:
+    // row 2: 3 balls (top base)
+    // row 1: 2 balls
+    // row 0: 1 ball (apex)
+    setBall(grid, { row: 2, col: 3 }, { color: 'blue', position: { row: 2, col: 3 } });
+    setBall(grid, { row: 2, col: 4 }, { color: 'blue', position: { row: 2, col: 4 } });
+    setBall(grid, { row: 2, col: 5 }, { color: 'blue', position: { row: 2, col: 5 } });
+    setBall(grid, { row: 1, col: 4 }, { color: 'blue', position: { row: 1, col: 4 } });
+    setBall(grid, { row: 1, col: 5 }, { color: 'blue', position: { row: 1, col: 5 } });
+    setBall(grid, { row: 0, col: 5 }, { color: 'blue', position: { row: 0, col: 5 } });
+
+    const matches = findPyramid(grid);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].type).toBe('pyramid');
+    expect(matches[0].color).toBe('blue');
+  });
+
+  it('does not match with 5 balls', () => {
+    const grid = createEmptyGrid();
+    setBall(grid, { row: 0, col: 3 }, { color: 'red', position: { row: 0, col: 3 } });
+    setBall(grid, { row: 0, col: 4 }, { color: 'red', position: { row: 0, col: 4 } });
+    setBall(grid, { row: 0, col: 5 }, { color: 'red', position: { row: 0, col: 5 } });
+    setBall(grid, { row: 1, col: 3 }, { color: 'red', position: { row: 1, col: 3 } });
+    setBall(grid, { row: 1, col: 4 }, { color: 'red', position: { row: 1, col: 4 } });
+    // Missing apex at row 2
+
+    const matches = findPyramid(grid);
+    expect(matches).toEqual([]);
   });
 });
