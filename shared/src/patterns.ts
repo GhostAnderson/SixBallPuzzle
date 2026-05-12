@@ -1,5 +1,5 @@
 import type { GridPosition, PatternMatch } from './types';
-import { getBall, getNeighbors, getRowWidth, type Grid } from './grid';
+import { getBall, getNeighbors, getRowWidth, isValidPosition, type Grid } from './grid';
 import { GRID_HEIGHT } from './types';
 
 function findConnectedGroup(
@@ -156,6 +156,72 @@ export function findSixLine(grid: Grid): PatternMatch[] {
             });
           }
         }
+      }
+    }
+  }
+
+  return matches;
+}
+
+/**
+ * Get all 6 neighbor positions for a center position.
+ * Returns null for out-of-bounds positions.
+ */
+function getAllNeighborPositions(center: GridPosition): (GridPosition | null)[] {
+  const isEvenRow = center.row % 2 === 0;
+
+  const offsets = isEvenRow
+    ? [
+        { dRow: 1, dCol: -1 },  { dRow: 1, dCol: 0 },
+        { dRow: 0, dCol: -1 },  { dRow: 0, dCol: 1 },
+        { dRow: -1, dCol: -1 }, { dRow: -1, dCol: 0 },
+      ]
+    : [
+        { dRow: 1, dCol: 0 },  { dRow: 1, dCol: 1 },
+        { dRow: 0, dCol: -1 }, { dRow: 0, dCol: 1 },
+        { dRow: -1, dCol: 0 }, { dRow: -1, dCol: 1 },
+      ];
+
+  return offsets.map(offset => {
+    const pos = { row: center.row + offset.dRow, col: center.col + offset.dCol };
+    return isValidPosition(pos) ? pos : null;
+  });
+}
+
+/**
+ * Find all hexagon ring patterns (6 same-colored balls around any center).
+ */
+export function findHexagonRing(grid: Grid): PatternMatch[] {
+  const matches: PatternMatch[] = [];
+  const foundRings = new Set<string>();
+
+  for (let row = 1; row < GRID_HEIGHT - 1; row++) {
+    const width = getRowWidth(row);
+    for (let col = 1; col < width - 1; col++) {
+      const center = { row, col };
+      const neighborPositions = getAllNeighborPositions(center);
+
+      const validNeighbors = neighborPositions.filter((p): p is GridPosition => p !== null);
+      if (validNeighbors.length !== 6) continue;
+
+      const neighborBalls = validNeighbors.map(pos => getBall(grid, pos));
+      if (neighborBalls.some(b => b === null)) continue;
+
+      const firstColor = neighborBalls[0]!.color;
+      if (!neighborBalls.every(b => b!.color === firstColor)) continue;
+
+      const sortedPositions = [...validNeighbors].sort((a, b) =>
+        a.row !== b.row ? a.row - b.row : a.col - b.col
+      );
+      const ringKey = sortedPositions.map(p => `${p.row},${p.col}`).join('|');
+
+      if (!foundRings.has(ringKey)) {
+        foundRings.add(ringKey);
+        matches.push({
+          type: 'hexagonRing',
+          color: firstColor,
+          positions: validNeighbors,
+        });
       }
     }
   }

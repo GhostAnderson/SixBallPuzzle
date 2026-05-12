@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findSixConnected, findSixLine } from './patterns';
+import { findSixConnected, findSixLine, findHexagonRing } from './patterns';
 import { createEmptyGrid, setBall } from './grid';
 import type { Ball } from './types';
 
@@ -93,5 +93,68 @@ describe('findSixLine', () => {
     const matches = findSixLine(grid);
     expect(matches).toHaveLength(1);
     expect(matches[0].type).toBe('sixLine');
+  });
+});
+
+describe('findHexagonRing', () => {
+  it('returns empty array for empty grid', () => {
+    const grid = createEmptyGrid();
+    const matches = findHexagonRing(grid);
+    expect(matches).toEqual([]);
+  });
+
+  it('finds a hexagon ring (6 same-color balls around a center)', () => {
+    const grid = createEmptyGrid();
+    // Center ball (any color)
+    setBall(grid, { row: 2, col: 5 }, { color: 'yellow', position: { row: 2, col: 5 } });
+
+    // 6 red balls around it (even row neighbors)
+    const ringPositions = [
+      { row: 3, col: 4 }, { row: 3, col: 5 },
+      { row: 2, col: 4 }, { row: 2, col: 6 },
+      { row: 1, col: 4 }, { row: 1, col: 5 },
+    ];
+    ringPositions.forEach(pos => {
+      setBall(grid, pos, { color: 'red', position: pos });
+    });
+
+    const matches = findHexagonRing(grid);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].type).toBe('hexagonRing');
+    expect(matches[0].color).toBe('red');
+    expect(matches[0].positions).toHaveLength(6);
+  });
+
+  it('does not match if one ring ball is different color', () => {
+    const grid = createEmptyGrid();
+    setBall(grid, { row: 2, col: 5 }, { color: 'yellow', position: { row: 2, col: 5 } });
+
+    // 5 red + 1 blue
+    setBall(grid, { row: 3, col: 4 }, { color: 'red', position: { row: 3, col: 4 } });
+    setBall(grid, { row: 3, col: 5 }, { color: 'red', position: { row: 3, col: 5 } });
+    setBall(grid, { row: 2, col: 4 }, { color: 'red', position: { row: 2, col: 4 } });
+    setBall(grid, { row: 2, col: 6 }, { color: 'blue', position: { row: 2, col: 6 } }); // different!
+    setBall(grid, { row: 1, col: 4 }, { color: 'red', position: { row: 1, col: 4 } });
+    setBall(grid, { row: 1, col: 5 }, { color: 'red', position: { row: 1, col: 5 } });
+
+    const matches = findHexagonRing(grid);
+    expect(matches).toEqual([]);
+  });
+
+  it('works with empty center', () => {
+    const grid = createEmptyGrid();
+    // No center ball, just the ring
+    const ringPositions = [
+      { row: 3, col: 4 }, { row: 3, col: 5 },
+      { row: 2, col: 4 }, { row: 2, col: 6 },
+      { row: 1, col: 4 }, { row: 1, col: 5 },
+    ];
+    ringPositions.forEach(pos => {
+      setBall(grid, pos, { color: 'green', position: pos });
+    });
+
+    const matches = findHexagonRing(grid);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].color).toBe('green');
   });
 });
