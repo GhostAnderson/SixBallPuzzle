@@ -33,12 +33,9 @@ function findFallDestination(grid: Grid, pos: GridPosition): GridPosition {
     const leftEmpty = isValidPosition(lowerLeft) && getBall(grid, lowerLeft) === null;
     const rightEmpty = isValidPosition(lowerRight) && getBall(grid, lowerRight) === null;
 
-    // When both paths are open, prefer the direction that keeps the ball
-    // in the same visual column (lowerRight on even rows, lowerLeft on odd rows).
-    // This is the "straight down" fall path in the hex grid.
+    // When both paths are open, always prefer right (gravity rule 2).
     if (leftEmpty && rightEmpty) {
-      // Both paths open: choose the one that maintains column position
-      current = isEvenRow ? lowerRight : lowerLeft;
+      current = lowerRight;
     } else if (rightEmpty) {
       current = lowerRight;
     } else if (leftEmpty) {

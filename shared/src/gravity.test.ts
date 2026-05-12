@@ -13,8 +13,8 @@ describe('gravity', () => {
       const newGrid = applyGravity(grid);
 
       expect(getBall(newGrid, { row: 5, col: 5 })).toBeNull();
-      expect(getBall(newGrid, { row: 0, col: 5 })).not.toBeNull();
-      expect(getBall(newGrid, { row: 0, col: 5 })?.color).toBe('red');
+      expect(getBall(newGrid, { row: 0, col: 8 })).not.toBeNull();
+      expect(getBall(newGrid, { row: 0, col: 8 })?.color).toBe('red');
     });
 
     it('ball on bottom row stays in place', () => {
