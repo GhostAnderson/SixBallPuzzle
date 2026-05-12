@@ -1,0 +1,22 @@
+{
+  "name": "@six-balls/server",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@six-balls/shared": "*",
+    "express": "^4.19.0",
+    "socket.io": "^4.7.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}
