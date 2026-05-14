@@ -104,3 +104,15 @@ export function isGameOver(grid: Grid): boolean {
   }
   return false;
 }
+
+/**
+ * Get auto-fall interval in ms based on elapsed game time.
+ */
+export function getSpeedInterval(elapsedMs: number): number {
+  const seconds = elapsedMs / 1000;
+  if (seconds < 30) return 1000;
+  if (seconds < 60) return 800;
+  if (seconds < 120) return 600;
+  if (seconds < 180) return 450;
+  return 300;
+}
