@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { getSocket } from './socket/socket';
 import Menu from './components/Menu';
 import GameView from './components/GameView';
+import ThemeSwitcher from './components/ThemeSwitcher';
+import { getStoredTheme, storeTheme } from './themes/themes';
 import type { GameState } from '@six-balls/shared';
 
 type AppScreen = 'menu' | 'waiting' | 'playing' | 'ended';
@@ -11,7 +13,8 @@ export default function App() {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [joinError, setJoinError] = useState<string | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [playerId] = useState(() => `player_${Math.random().toString(36).slice(2)}`);
+  const [playerId, setPlayerId] = useState<string>('');
+  const [theme, setTheme] = useState<string>(getStoredTheme);
 
   useEffect(() => {
     const socket = getSocket();
@@ -35,9 +38,10 @@ export default function App() {
       }
     });
 
-    socket.on('gameStart', ({ gameState: initialState }: { gameState: GameState }) => {
+    socket.on('gameStart', ({ gameState: initialState, playerId: assignedId }: { gameState: GameState; playerId: string }) => {
       setScreen('playing');
       setGameState(initialState);
+      setPlayerId(assignedId);
     });
 
     socket.on('gameStateUpdate', ({ gameState: newState }: { gameState: GameState }) => {
@@ -66,15 +70,42 @@ export default function App() {
     setJoinError(null);
   }, []);
 
+  const handleReady = useCallback(() => {
+    const socket = getSocket();
+    socket.emit('playerReady');
+  }, []);
+
+  const handleThemeChange = useCallback((newTheme: string) => {
+    setTheme(newTheme);
+    storeTheme(newTheme);
+  }, []);
+
   if (screen === 'playing' || screen === 'waiting') {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <h1 style={{ marginBottom: '1rem' }}>Six Balls Puzzle</h1>
         {screen === 'waiting' ? (
-          <p>Opponent joined! Get ready...</p>
+          <div>
+            <p style={{ marginBottom: '1rem' }}>Opponent joined! Get ready...</p>
+            <button
+              onClick={handleReady}
+              style={{
+                padding: '0.75rem 2rem',
+                fontSize: '1.1rem',
+                background: '#44aa44',
+                border: 'none',
+                borderRadius: '8px',
+                color: '#fff',
+                cursor: 'pointer',
+              }}
+            >
+              Ready
+            </button>
+          </div>
         ) : gameState ? (
           <>
-            <GameView gameState={gameState} myPlayerId={playerId} />
+            <ThemeSwitcher currentTheme={theme} onThemeChange={handleThemeChange} />
+            <GameView gameState={gameState} myPlayerId={playerId} theme={theme} />
             <p style={{ marginTop: '1rem', color: '#888' }}>
               Arrow keys to move/rotate, Space to drop
             </p>
