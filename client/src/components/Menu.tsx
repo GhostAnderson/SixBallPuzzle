@@ -5,9 +5,10 @@ interface MenuProps {
   onJoinRoom: (code: string) => void;
   createdRoomCode: string | null;
   joinError: string | null;
+  onLocalPlay?: () => void;
 }
 
-export default function Menu({ onCreateRoom, onJoinRoom, createdRoomCode, joinError }: MenuProps) {
+export default function Menu({ onCreateRoom, onJoinRoom, createdRoomCode, joinError, onLocalPlay }: MenuProps) {
   const [joinCode, setJoinCode] = useState('');
 
   return (
@@ -32,6 +33,12 @@ export default function Menu({ onCreateRoom, onJoinRoom, createdRoomCode, joinEr
         >
           Create Room
         </button>
+
+        {onLocalPlay && (
+          <button onClick={onLocalPlay} style={{ padding: '1rem 2rem', fontSize: '1.2rem', background: '#44aa44', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'block', width: '100%', marginBottom: '1rem' }}>
+            Local Play
+          </button>
+        )}
 
         {createdRoomCode && (
           <div style={{

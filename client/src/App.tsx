@@ -4,9 +4,12 @@ import Menu from './components/Menu';
 import GameView from './components/GameView';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import { getStoredTheme, storeTheme } from './themes/themes';
+import { useAutoDrop } from './hooks/useAutoDrop';
+import { useLocalGame } from './hooks/useLocalGame';
+import type { PlayerInput } from './game/localGame';
 import type { GameState } from '@six-balls/shared';
 
-type AppScreen = 'menu' | 'waiting' | 'playing' | 'ended';
+type AppScreen = 'menu' | 'waiting' | 'playing' | 'ended' | 'localPlay';
 
 export default function App() {
   const [screen, setScreen] = useState<AppScreen>('menu');
@@ -15,6 +18,7 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [playerId, setPlayerId] = useState<string>('');
   const [theme, setTheme] = useState<string>(getStoredTheme);
+  const { gameState: localGameState, startGame: startLocalGame, handleInput: handleLocalInput, stopGame: stopLocalGame } = useLocalGame();
 
   useEffect(() => {
     const socket = getSocket();
@@ -80,6 +84,44 @@ export default function App() {
     storeTheme(newTheme);
   }, []);
 
+  const handleAutoDrop = useCallback(() => {
+    if (!gameState || !playerId) return;
+    getSocket().emit('playerInput', { action: 'hardDrop' });
+  }, [gameState, playerId]);
+
+  useAutoDrop({
+    startTime: gameState?.startTime ?? null,
+    onDrop: handleAutoDrop,
+    isActive: screen === 'playing' && gameState?.phase === 'playing',
+  });
+
+  const handleLocalPlay = useCallback(() => {
+    setScreen('localPlay');
+    startLocalGame();
+  }, [startLocalGame]);
+
+  useEffect(() => {
+    if (screen !== 'localPlay') return;
+    const hkd = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowLeft': e.preventDefault(); handleLocalInput(0, 'moveLeft'); break;
+        case 'ArrowRight': e.preventDefault(); handleLocalInput(0, 'moveRight'); break;
+        case 'ArrowUp': e.preventDefault(); handleLocalInput(0, 'rotate'); break;
+        case 'ArrowDown': e.preventDefault(); handleLocalInput(0, 'softDrop'); break;
+        case ' ': e.preventDefault(); handleLocalInput(0, 'hardDrop'); break;
+      }
+      switch (e.code) {
+        case 'KeyA': e.preventDefault(); handleLocalInput(1, 'moveLeft'); break;
+        case 'KeyD': e.preventDefault(); handleLocalInput(1, 'moveRight'); break;
+        case 'KeyW': e.preventDefault(); handleLocalInput(1, 'rotate'); break;
+        case 'KeyS': e.preventDefault(); handleLocalInput(1, 'softDrop'); break;
+        case 'ShiftLeft': case 'ShiftRight': e.preventDefault(); handleLocalInput(1, 'hardDrop'); break;
+      }
+    };
+    window.addEventListener('keydown', hkd);
+    return () => { window.removeEventListener('keydown', hkd); stopLocalGame(); };
+  }, [screen, handleLocalInput, stopLocalGame]);
+
   if (screen === 'playing' || screen === 'waiting') {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -117,12 +159,29 @@ export default function App() {
     );
   }
 
+  if (screen === 'localPlay') {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <h1>Six Balls Puzzle - Local Play</h1>
+        <ThemeSwitcher currentTheme={theme} onThemeChange={handleThemeChange} />
+        {localGameState ? (
+          <>
+            <GameView gameState={localGameState} myPlayerId="player1" theme={theme} />
+            <p style={{ marginTop: '1rem', color: '#888' }}>P1: Arrow keys + Space | P2: WASD + Shift</p>
+            <button onClick={() => { setScreen('menu'); stopLocalGame(); }} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#666', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}>Back to Menu</button>
+          </>
+        ) : <p>Starting game...</p>}
+      </div>
+    );
+  }
+
   return (
     <Menu
       onCreateRoom={handleCreateRoom}
       onJoinRoom={handleJoinRoom}
       createdRoomCode={roomCode}
       joinError={joinError}
+      onLocalPlay={handleLocalPlay}
     />
   );
 }
