@@ -6,6 +6,7 @@ import {
   createPieceAtSpawn,
   isGameOver,
   createEmptyGrid,
+  createRNG,
   type GameState,
   type PlayerState,
   type TrianglePiece,
@@ -14,20 +15,27 @@ import {
 
 export type GameInput = 'moveLeft' | 'moveRight' | 'rotate' | 'softDrop' | 'hardDrop';
 
-export function createInitialGameState(): GameState {
-  const p1 = createPlayerState('p1');
-  const p2 = createPlayerState('p2');
-  return { phase: 'playing', players: [p1, p2], startTime: Date.now(), winner: null };
+export function createInitialGameState(player1Id: string, player2Id: string): GameState {
+  const rng = createRNG(Date.now());
+  const sequence: TrianglePiece[] = [];
+  for (let i = 0; i < 100; i++) {
+    sequence.push(createPieceAtSpawn(rng));
+  }
+  const p1 = createPlayerState(player1Id, sequence, 0);
+  const p2 = createPlayerState(player2Id, sequence, 0);
+  return {
+    phase: 'playing', players: [p1, p2],
+    startTime: Date.now(), winner: null,
+    pieceIndex: 0, pieceSequence: sequence,
+  };
 }
 
-function createPlayerState(id: string): PlayerState {
+function createPlayerState(id: string, sequence: TrianglePiece[], index: number): PlayerState {
   return {
-    id,
-    grid: createEmptyGrid(),
-    currentPiece: createPieceAtSpawn(),
-    nextPiece: createPieceAtSpawn(),
-    attackQueue: [],
-    isAlive: true,
+    id, grid: createEmptyGrid(),
+    currentPiece: sequence[index],
+    nextPiece: sequence[index + 1],
+    attackQueue: [], isAlive: true,
   };
 }
 
@@ -83,23 +91,18 @@ export function processInput(
   return { ...gameState, players: newPlayers };
 }
 
-function handlePieceLand(
-  gameState: GameState,
-  playerIndex: number,
-  piece: TrianglePiece
-): GameState {
+function handlePieceLand(gameState: GameState, playerIndex: number, piece: TrianglePiece): GameState {
   const player = gameState.players[playerIndex];
   const opponentIndex = playerIndex === 0 ? 1 : 0;
-
   const { grid: processedGrid, attacks } = landPiece(player.grid, piece);
   const dead = isGameOver(processedGrid);
-
   const newPlayers = [...gameState.players] as [PlayerState, PlayerState];
+  const nextIndex = gameState.pieceIndex + 1;
+
   newPlayers[playerIndex] = {
-    ...player,
-    grid: processedGrid,
-    currentPiece: dead ? null : player.nextPiece,
-    nextPiece: createPieceAtSpawn(),
+    ...player, grid: processedGrid,
+    currentPiece: dead ? null : gameState.pieceSequence[nextIndex],
+    nextPiece: gameState.pieceSequence[nextIndex + 1],
     isAlive: !dead,
   };
 
@@ -114,10 +117,5 @@ function handlePieceLand(
   if (!newPlayers[0].isAlive) winner = newPlayers[1].id;
   if (!newPlayers[1].isAlive) winner = newPlayers[0].id;
 
-  return {
-    ...gameState,
-    players: newPlayers,
-    phase: winner ? 'ended' : 'playing',
-    winner,
-  };
+  return { ...gameState, players: newPlayers, phase: winner ? 'ended' : 'playing', winner, pieceIndex: nextIndex };
 }
