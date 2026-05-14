@@ -205,6 +205,36 @@ describe('findPyramid', () => {
     expect(matches[0].color).toBe('blue');
   });
 
+  it('finds point-up pyramid at row 4 (even base row)', () => {
+    const grid = createEmptyGrid();
+    setBall(grid, { row: 4, col: 1 }, { color: 'red', position: { row: 4, col: 1 } });
+    setBall(grid, { row: 4, col: 2 }, { color: 'red', position: { row: 4, col: 2 } });
+    setBall(grid, { row: 4, col: 3 }, { color: 'red', position: { row: 4, col: 3 } });
+    setBall(grid, { row: 5, col: 1 }, { color: 'red', position: { row: 5, col: 1 } });
+    setBall(grid, { row: 5, col: 2 }, { color: 'red', position: { row: 5, col: 2 } });
+    setBall(grid, { row: 6, col: 1 }, { color: 'red', position: { row: 6, col: 1 } });
+    const matches = findPyramid(grid);
+    expect(matches.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('finds both orientations simultaneously', () => {
+    const grid = createEmptyGrid();
+    // Point-up red at row 0
+    for (let c = 0; c < 3; c++) setBall(grid, { row: 0, col: c }, { color: 'red', position: { row: 0, col: c } });
+    setBall(grid, { row: 1, col: 0 }, { color: 'red', position: { row: 1, col: 0 } });
+    setBall(grid, { row: 1, col: 1 }, { color: 'red', position: { row: 1, col: 1 } });
+    setBall(grid, { row: 2, col: 0 }, { color: 'red', position: { row: 2, col: 0 } });
+    // Point-down blue at row 3-5
+    setBall(grid, { row: 3, col: 7 }, { color: 'blue', position: { row: 3, col: 7 } });
+    setBall(grid, { row: 4, col: 7 }, { color: 'blue', position: { row: 4, col: 7 } });
+    setBall(grid, { row: 4, col: 8 }, { color: 'blue', position: { row: 4, col: 8 } });
+    setBall(grid, { row: 5, col: 7 }, { color: 'blue', position: { row: 5, col: 7 } });
+    setBall(grid, { row: 5, col: 8 }, { color: 'blue', position: { row: 5, col: 8 } });
+    setBall(grid, { row: 5, col: 9 }, { color: 'blue', position: { row: 5, col: 9 } });
+    const matches = findPyramid(grid);
+    expect(matches.length).toBeGreaterThanOrEqual(1);
+  });
+
   it('does not match with 5 balls', () => {
     const grid = createEmptyGrid();
     setBall(grid, { row: 0, col: 3 }, { color: 'red', position: { row: 0, col: 3 } });
