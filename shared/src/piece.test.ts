@@ -164,7 +164,7 @@ describe('createRandomPiece', () => {
 describe('createPieceAtSpawn', () => {
   it('creates piece at top center', () => {
     const piece = createPieceAtSpawn();
-    expect(piece.position.row).toBe(GRID_HEIGHT - 1);  // Top row (11)
+    expect(piece.position.row).toBe(GRID_HEIGHT - 2);  // Row 10, so ball 0 lands at row 11
     expect(piece.position.col).toBe(4);  // Center-ish
   });
 });

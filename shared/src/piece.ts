@@ -127,7 +127,7 @@ export function createPieceAtSpawn(rng?: RNGLike): TrianglePiece {
   const pick = rng
     ? () => rng.pickOne(BALL_COLORS)
     : () => BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)];
-  return { position: { row: GRID_HEIGHT - 1, col: 4 }, rotation: 0, colors: [pick(), pick(), pick()] };
+  return { position: { row: GRID_HEIGHT - 2, col: 4 }, rotation: 0, colors: [pick(), pick(), pick()] };
 }
 
 /**
