@@ -10,7 +10,6 @@ import {
   type GameState,
   type PlayerState,
   type TrianglePiece,
-  type Grid,
 } from '@six-balls/shared';
 
 export type GameInput = 'moveLeft' | 'moveRight' | 'rotate' | 'softDrop' | 'hardDrop';
@@ -18,7 +17,7 @@ export type GameInput = 'moveLeft' | 'moveRight' | 'rotate' | 'softDrop' | 'hard
 export function createInitialGameState(player1Id: string, player2Id: string): GameState {
   const rng = createRNG(Date.now());
   const sequence: TrianglePiece[] = [];
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 200; i++) {
     sequence.push(createPieceAtSpawn(rng));
   }
   const p1 = createPlayerState(player1Id, sequence, 0);
@@ -26,7 +25,7 @@ export function createInitialGameState(player1Id: string, player2Id: string): Ga
   return {
     phase: 'playing', players: [p1, p2],
     startTime: Date.now(), winner: null,
-    pieceIndex: 0, pieceSequence: sequence,
+    pieceSequence: sequence,
   };
 }
 
@@ -35,6 +34,7 @@ function createPlayerState(id: string, sequence: TrianglePiece[], index: number)
     id, grid: createEmptyGrid(),
     currentPiece: sequence[index],
     nextPiece: sequence[index + 1],
+    pieceIndex: index,
     attackQueue: [], isAlive: true,
   };
 }
@@ -97,12 +97,13 @@ function handlePieceLand(gameState: GameState, playerIndex: number, piece: Trian
   const { grid: processedGrid, attacks } = landPiece(player.grid, piece);
   const dead = isGameOver(processedGrid);
   const newPlayers = [...gameState.players] as [PlayerState, PlayerState];
-  const nextIndex = gameState.pieceIndex + 1;
+  const nextIndex = player.pieceIndex + 1;
 
   newPlayers[playerIndex] = {
     ...player, grid: processedGrid,
     currentPiece: dead ? null : gameState.pieceSequence[nextIndex],
     nextPiece: gameState.pieceSequence[nextIndex + 1],
+    pieceIndex: nextIndex,
     isAlive: !dead,
   };
 
@@ -117,5 +118,5 @@ function handlePieceLand(gameState: GameState, playerIndex: number, piece: Trian
   if (!newPlayers[0].isAlive) winner = newPlayers[1].id;
   if (!newPlayers[1].isAlive) winner = newPlayers[0].id;
 
-  return { ...gameState, players: newPlayers, phase: winner ? 'ended' : 'playing', winner, pieceIndex: nextIndex };
+  return { ...gameState, players: newPlayers, phase: winner ? 'ended' : 'playing', winner };
 }
