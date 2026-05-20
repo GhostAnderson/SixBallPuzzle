@@ -5,13 +5,20 @@ export interface Theme {
 }
 
 export const THEMES: Theme[] = [
-  { name: 'Classic', renderer: 'gradient' },
+  { name: 'Vibrant', renderer: 'gradient' },
   { name: 'Flat', renderer: 'solid' },
   { name: 'Emoji', renderer: 'emoji', emojiMap: { red: '🍎', purple: '🍇', yellow: '⭐', blue: '🐳', green: '🐸' } },
-  { name: 'Fruit', renderer: 'emoji', emojiMap: { red: '🍎', purple: '🍇', yellow: '🍋', blue: '🫐', green: '🥝' } },
 ];
 
-const DEFAULT_THEME = 'Classic';
+export const BALL_COLORS_HEX: Record<string, string> = {
+  red: '#ff3366',
+  purple: '#8833ff',
+  yellow: '#ffbb00',
+  blue: '#3366ff',
+  green: '#22bb55',
+};
+
+const DEFAULT_THEME = 'Vibrant';
 const STORAGE_KEY = 'six-balls-theme';
 
 export function getStoredTheme(): string {
@@ -24,9 +31,4 @@ export function getStoredTheme(): string {
 
 export function storeTheme(name: string): void {
   try { localStorage.setItem(STORAGE_KEY, name); } catch {}
-}
-
-export function getThemeEmojiMap(themeName: string): Record<string, string> | undefined {
-  const theme = THEMES.find(t => t.name === themeName);
-  return theme?.emojiMap;
 }
