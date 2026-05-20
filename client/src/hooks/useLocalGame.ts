@@ -30,7 +30,7 @@ export function useLocalGame() {
       timers.push(setTimeout(() => {
         const e = engRef.current;
         if (!e || e.state.phase !== 'playing') return;
-        e.handleInput(pi, 'hardDrop');
+        e.handleInput(pi, 'softDrop');
         setGS({ ...e.state });
         if (e.state.phase === 'playing') sched(pi);
       }, iv));
