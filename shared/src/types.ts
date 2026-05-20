@@ -64,6 +64,7 @@ export interface PlayerState {
   nextPiece: TrianglePiece;
   attackQueue: Attack[];
   isAlive: boolean;
+  pieceIndex: number;
 }
 
 /** Complete game state */
@@ -72,6 +73,5 @@ export interface GameState {
   players: [PlayerState, PlayerState];
   startTime: number | null;
   winner: string | null;
-  pieceIndex: number;
   pieceSequence: TrianglePiece[];
 }
