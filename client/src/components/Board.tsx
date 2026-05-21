@@ -11,7 +11,8 @@ const PADDING_X = 44;
 const PADDING_Y = 32;
 const TOTAL_ROWS = 12;
 const CANVAS_W = 420;
-const CANVAS_H = 430;
+// Height: top padding + 11 row-spacings + bottom padding (symmetric to top)
+const CANVAS_H = Math.ceil(11 * Y_SPACING + PADDING_Y * 2);
 
 const HEX_COLORS: Record<string, string> = {
   red: '#ff3366', purple: '#8833ff', yellow: '#ffbb00', blue: '#3366ff', green: '#22bb55',
@@ -133,6 +134,9 @@ export default function Board({ grid, currentPiece, startTime, isMyBoard = false
   const lastDropTimeRef = useRef(Date.now());
   const prevGridRef = useRef<Grid>(grid);
   const lastPieceRef = useRef<TrianglePiece | null>(null);
+  // Stores the canvas (x,y) of each ball at the START of the current fall step,
+  // enabling smooth X+Y interpolation across hex row-parity changes.
+  const prevBallPositionsRef = useRef<Array<{ x: number; y: number }> | null>(null);
   const settlingBallsRef = useRef<SettlingBall[]>([]);
   const settlingPosRef = useRef<Set<string>>(new Set());
   const burstingRef = useRef<BurstBall[]>([]);
@@ -145,11 +149,27 @@ export default function Board({ grid, currentPiece, startTime, isMyBoard = false
 
     if (currentPiece) lastPieceRef.current = currentPiece;
 
-    if (prevPiece && currentPiece && currentPiece.position.row < prevPiece.position.row) {
-      lastDropTimeRef.current = now;
+    // Determine fall animation state based on how the piece changed.
+    const prevRow = prevPiece?.position.row ?? -99;
+    const prevCol = prevPiece?.position.col ?? -99;
+    const prevRot = prevPiece?.rotation ?? -99;
+    const curRow  = currentPiece?.position.row ?? -99;
+    const curCol  = currentPiece?.position.col ?? -99;
+    const curRot  = currentPiece?.rotation ?? -99;
+
+    if (prevRow !== curRow || prevCol !== curCol || prevRot !== curRot) {
+      if (prevPiece && currentPiece && prevRow === curRow + 1 && prevCol === curCol) {
+        // Piece fell exactly one row: save current canvas positions and start interpolation.
+        prevBallPositionsRef.current = getPieceBallPositions(prevPiece).map(posToCanvas);
+        lastDropTimeRef.current = now;
+      } else {
+        // Any other change (spawn, hard-drop, rotate, horizontal move): snap immediately.
+        prevBallPositionsRef.current = null;
+      }
     }
 
     if (prevGrid !== grid) {
+      // Burst animation for cleared balls.
       const bursts: BurstBall[] = [];
       for (let row = 0; row < TOTAL_ROWS; row++) {
         const rw = getRowWidth(row);
@@ -162,8 +182,9 @@ export default function Board({ grid, currentPiece, startTime, isMyBoard = false
       }
       if (bursts.length > 0) burstingRef.current = [...burstingRef.current, ...bursts];
 
-      if (prevPiece && !currentPiece && lastPieceRef.current) {
-        const startPositions = getPieceBallPositions(lastPieceRef.current).map(posToCanvas);
+      // Settling animation: detect balls that newly appeared in the grid (piece just landed).
+      // Use prevPiece (the piece that was active when the grid changed) as the starting position.
+      if (prevPiece) {
         const newBalls: Array<{ row: number; col: number; color: string }> = [];
         for (let row = 0; row < TOTAL_ROWS; row++) {
           const rw = getRowWidth(row);
@@ -173,17 +194,20 @@ export default function Board({ grid, currentPiece, startTime, isMyBoard = false
             }
           }
         }
-        settlingBallsRef.current = newBalls.map((ball, i) => ({
-          fromX: startPositions[Math.min(i, 2)].x,
-          fromY: startPositions[Math.min(i, 2)].y,
-          toX: posToCanvas({ row: ball.row, col: ball.col }).x,
-          toY: posToCanvas({ row: ball.row, col: ball.col }).y,
-          toRow: ball.row, toCol: ball.col,
-          color: ball.color,
-          startTime: now + i * 30,
-          duration: 250,
-        }));
-        settlingPosRef.current = new Set(newBalls.map(b => `${b.row},${b.col}`));
+        if (newBalls.length > 0 && newBalls.length <= 3) {
+          const startPositions = getPieceBallPositions(prevPiece).map(posToCanvas);
+          settlingBallsRef.current = newBalls.map((ball, i) => ({
+            fromX: startPositions[Math.min(i, 2)].x,
+            fromY: startPositions[Math.min(i, 2)].y,
+            toX: posToCanvas({ row: ball.row, col: ball.col }).x,
+            toY: posToCanvas({ row: ball.row, col: ball.col }).y,
+            toRow: ball.row, toCol: ball.col,
+            color: ball.color,
+            startTime: now + i * 30,
+            duration: 250,
+          }));
+          settlingPosRef.current = new Set(newBalls.map(b => `${b.row},${b.col}`));
+        }
       }
     }
 
@@ -259,15 +283,25 @@ export default function Board({ grid, currentPiece, startTime, isMyBoard = false
         }
       }
 
+      // Draw the active piece with smooth X+Y interpolation across each row drop.
       if (piece) {
         const positions = getPieceBallPositions(piece);
-        const elapsed = now - lastDropTimeRef.current;
-        const interval = st ? getSpeedInterval(now - st) : 1000;
-        const t = Math.min(elapsed / interval, 1);
-        const yLift = Y_SPACING * (1 - t);
-        for (let i = 0; i < 3; i++) {
-          const { x, y } = posToCanvas(positions[i]);
-          drawBall(ctx, x, y - yLift, piece.colors[i]);
+        const prev = prevBallPositionsRef.current;
+        if (prev) {
+          const elapsed = now - lastDropTimeRef.current;
+          const interval = st ? getSpeedInterval(now - st) : 1000;
+          const t = Math.min(elapsed / interval, 1);
+          for (let i = 0; i < 3; i++) {
+            const to = posToCanvas(positions[i]);
+            const x = prev[i].x + (to.x - prev[i].x) * t;
+            const y = prev[i].y + (to.y - prev[i].y) * t;
+            drawBall(ctx, x, y, piece.colors[i]);
+          }
+        } else {
+          for (let i = 0; i < 3; i++) {
+            const { x, y } = posToCanvas(positions[i]);
+            drawBall(ctx, x, y, piece.colors[i]);
+          }
         }
       }
 

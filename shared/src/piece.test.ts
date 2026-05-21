@@ -22,7 +22,7 @@ describe('getPieceBallPositions', () => {
     expect(positions).toHaveLength(3);
   });
 
-  it('rotation 0: top ball is above, two balls below', () => {
+  it('rotation 0: apex above, two balls below (▲ upright)', () => {
     const piece: TrianglePiece = {
       position: { row: 2, col: 5 },
       rotation: 0,
@@ -30,12 +30,13 @@ describe('getPieceBallPositions', () => {
     };
     const positions = getPieceBallPositions(piece);
 
-    expect(positions[0]).toEqual({ row: 3, col: 5 });
-    expect(positions[1]).toEqual({ row: 2, col: 4 });
-    expect(positions[2]).toEqual({ row: 2, col: 5 });
+    // center=apex at (2,5), LR=(1,5), LL=(1,4) — all mutually adjacent
+    expect(positions[0]).toEqual({ row: 2, col: 5 });
+    expect(positions[1]).toEqual({ row: 1, col: 5 });
+    expect(positions[2]).toEqual({ row: 1, col: 4 });
   });
 
-  it('rotation 3: triangle points down (inverted)', () => {
+  it('rotation 3: triangle points down (▽ inverted)', () => {
     const piece: TrianglePiece = {
       position: { row: 2, col: 5 },
       rotation: 3,
@@ -43,9 +44,10 @@ describe('getPieceBallPositions', () => {
     };
     const positions = getPieceBallPositions(piece);
 
-    expect(positions[0]).toEqual({ row: 1, col: 4 });
-    expect(positions[1]).toEqual({ row: 2, col: 5 });
-    expect(positions[2]).toEqual({ row: 2, col: 4 });
+    // center at (2,5), UL=(3,4), UR=(3,5) — all mutually adjacent
+    expect(positions[0]).toEqual({ row: 2, col: 5 });
+    expect(positions[1]).toEqual({ row: 3, col: 4 });
+    expect(positions[2]).toEqual({ row: 3, col: 5 });
   });
 });
 
@@ -118,8 +120,9 @@ describe('canPlacePiece', () => {
 
   it('returns false when a ball position is occupied', () => {
     const grid = createEmptyGrid();
-    const ball: Ball = { color: 'purple', position: { row: 5, col: 5 } };
-    setBall(grid, { row: 5, col: 5 }, ball);
+    // rotation 0 from (4,5) even row: center=(4,5), LR=(3,5), LL=(3,4)
+    const ball: Ball = { color: 'purple', position: { row: 3, col: 5 } };
+    setBall(grid, { row: 3, col: 5 }, ball);
 
     const piece: TrianglePiece = {
       position: { row: 4, col: 5 },

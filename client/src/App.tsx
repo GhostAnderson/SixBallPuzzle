@@ -103,8 +103,11 @@ export default function App() {
     const didWin = isEnded && gameState?.winner === playerId;
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #fff5fb, #f5f0ff)', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ textAlign: 'center', padding: '16px 0 12px', borderBottom: '1px solid #f0d0e8' }}>
+        <div style={{ position: 'relative', textAlign: 'center', padding: '16px 0 12px', borderBottom: '1px solid #f0d0e8' }}>
           <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 900, color: '#ff4499', letterSpacing: '2px' }}>SIX BALLS PUZZLE</h1>
+          <button onClick={backToMenu} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', padding: '7px 16px', fontSize: '13px', fontWeight: 700, background: '#f0e0f0', border: 'none', borderRadius: '16px', color: '#8833ff', cursor: 'pointer' }}>
+            Menu
+          </button>
         </div>
         {screen === 'waiting' ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '48px' }}>
@@ -142,8 +145,11 @@ export default function App() {
     const isEnded = ls?.phase === 'ended';
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #fff5fb, #f5f0ff)', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ textAlign: 'center', padding: '16px 0 12px', borderBottom: '1px solid #f0d0e8' }}>
+        <div style={{ position: 'relative', textAlign: 'center', padding: '16px 0 12px', borderBottom: '1px solid #f0d0e8' }}>
           <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 900, color: '#ff4499', letterSpacing: '2px' }}>SIX BALLS PUZZLE</h1>
+          <button onClick={backToMenu} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', padding: '7px 16px', fontSize: '13px', fontWeight: 700, background: '#f0e0f0', border: 'none', borderRadius: '16px', color: '#8833ff', cursor: 'pointer' }}>
+            Menu
+          </button>
         </div>
         {ls ? (
           <div style={{ position: 'relative' }}>

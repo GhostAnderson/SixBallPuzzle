@@ -12,35 +12,38 @@ interface Offset {
   dColOdd: number;
 }
 
+// Each rotation is a set of 3 mutually-adjacent hex cells (proper equilateral triangle).
+// Directions: UL=(+1,-1/0), UR=(+1,0/+1), R=(0,+1/+1), LR=(-1,0/+1), LL=(-1,-1/0), L=(0,-1/-1)
+// (dColEven / dColOdd for even/odd anchor row)
 const ROTATION_OFFSETS: Record<RotationState, [Offset, Offset, Offset]> = {
-  0: [
-    { dRow: 1, dColEven: 0, dColOdd: 1 },
+  0: [  // center (apex) + LR + LL  →  ▲ upright
+    { dRow: 0,  dColEven: 0,  dColOdd: 0  },
+    { dRow: -1, dColEven: 0,  dColOdd: 1  },
+    { dRow: -1, dColEven: -1, dColOdd: 0  },
+  ],
+  1: [  // center + LL + L
+    { dRow: 0,  dColEven: 0,  dColOdd: 0  },
+    { dRow: -1, dColEven: -1, dColOdd: 0  },
+    { dRow: 0,  dColEven: -1, dColOdd: -1 },
+  ],
+  2: [  // center + L + UL
+    { dRow: 0, dColEven: 0,  dColOdd: 0  },
     { dRow: 0, dColEven: -1, dColOdd: -1 },
-    { dRow: 0, dColEven: 0, dColOdd: 0 },
+    { dRow: 1, dColEven: -1, dColOdd: 0  },
   ],
-  1: [
-    { dRow: 1, dColEven: 0, dColOdd: 1 },
-    { dRow: 0, dColEven: 0, dColOdd: 0 },
+  3: [  // center + UL + UR  →  ▽ inverted
+    { dRow: 0, dColEven: 0,  dColOdd: 0 },
     { dRow: 1, dColEven: -1, dColOdd: 0 },
+    { dRow: 1, dColEven: 0,  dColOdd: 1 },
   ],
-  2: [
-    { dRow: 0, dColEven: 0, dColOdd: 0 },
-    { dRow: -1, dColEven: 0, dColOdd: 1 },
-    { dRow: 1, dColEven: -1, dColOdd: 0 },
+  4: [  // center + UR + R
+    { dRow: 0, dColEven: 0,  dColOdd: 0 },
+    { dRow: 1, dColEven: 0,  dColOdd: 1 },
+    { dRow: 0, dColEven: 1,  dColOdd: 1 },
   ],
-  3: [
-    { dRow: -1, dColEven: -1, dColOdd: 0 },
-    { dRow: 0, dColEven: 0, dColOdd: 0 },
-    { dRow: 0, dColEven: -1, dColOdd: -1 },
-  ],
-  4: [
-    { dRow: -1, dColEven: -1, dColOdd: 0 },
-    { dRow: -1, dColEven: 0, dColOdd: 1 },
-    { dRow: 0, dColEven: 0, dColOdd: 0 },
-  ],
-  5: [
-    { dRow: 0, dColEven: 0, dColOdd: 0 },
-    { dRow: 1, dColEven: -1, dColOdd: 0 },
+  5: [  // center + R + LR
+    { dRow: 0,  dColEven: 0, dColOdd: 0 },
+    { dRow: 0,  dColEven: 1, dColOdd: 1 },
     { dRow: -1, dColEven: 0, dColOdd: 1 },
   ],
 };
